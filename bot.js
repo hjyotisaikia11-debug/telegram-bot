@@ -4,6 +4,21 @@ process.on('uncaughtException', (err) => {
 
 const TelegramBot = require('node-telegram-bot-api');
 
+if (!process.env.BOT_TOKEN) {
+    console.log("❌ BOT_TOKEN missing!");
+    process.exit(1);
+}
+
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+
+bot.onText(/\/start/, (msg) => {
+    bot.sendMessage(msg.chat.id, "✅ Bot working!");
+});
+
+console.log("🚀 Bot started...");
+
+const TelegramBot = require('node-telegram-bot-api');
+
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
 const ADMIN_ID = 1342806336;
