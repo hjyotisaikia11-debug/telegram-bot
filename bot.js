@@ -1,18 +1,23 @@
 process.on('uncaughtException', (err) => {
-    console.log('Error:', err.message);
+    console.log('Error:', err);
 });
 
 const TelegramBot = require('node-telegram-bot-api');
+const express = require('express');
 
-// TOKEN CHECK
-if (!process.env.BOT_TOKEN) {
+const app = express();
+app.use(express.json());
+
+// ❗ TOKEN CHECK
+const TOKEN = process.env.BOT_TOKEN;
+if (!TOKEN) {
     console.log("❌ BOT_TOKEN missing!");
     process.exit(1);
 }
 
-const bot = new TelegramBot(process.env.BOT_TOKEN);
+const bot = new TelegramBot(TOKEN);
 
-const ADMIN_ID = 1342806336;
+const ADMIN_ID = 1342806336; // 👈 apna ID daalo
 
 let users = {};
 let history = [];
@@ -48,24 +53,26 @@ bot.on('message', (msg) => {
 
     if (!users[id].verified) {
         bot.sendMessage(ADMIN_ID,
-`User: ${id}
+`🆕 Verification Request
+
+User: ${id}
 Msg: ${msg.text}
 
 /approve ${id}`
         );
 
-        bot.sendMessage(id, "⏳ Pending...");
+        bot.sendMessage(id, "⏳ Verification pending...");
         return;
     }
 
     if (msg.text === "🟢 START") {
         users[id].active = true;
-        bot.sendMessage(id, "▶️ Started");
+        bot.sendMessage(id, "▶️ Prediction ON");
     }
 
     if (msg.text === "🔴 STOP") {
         users[id].active = false;
-        bot.sendMessage(id, "🛑 Stopped");
+        bot.sendMessage(id, "🛑 Prediction OFF");
     }
 });
 
@@ -91,29 +98,28 @@ setInterval(() => {
             if (history.length > 3) history.pop();
 
             bot.sendMessage(id,
-`🔥 RESULT → ${result}
+`⏰ AUTO PREDICTION
+
+🔥 RESULT → ${result}
 📊 Last 3 → ${history.join(" | ")}`
             );
         }
     });
 }, 60000);
 
-// 🌐 WEBHOOK SERVER
-const express = require("express");
-const app = express();
-
-app.use(express.json());
-
-app.post(`/bot${process.env.BOT_TOKEN}`, (req, res) => {
+// 🌐 WEBHOOK ROUTE
+app.post(`/bot${TOKEN}`, (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
 });
 
+// TEST ROUTE
 app.get("/", (req, res) => {
-    res.send("Bot is running!");
+    res.send("Bot is running");
 });
 
+// START SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log("🚀 Server started");
+    console.log("🚀 Server running on port " + PORT);
 });
