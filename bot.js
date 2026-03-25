@@ -122,4 +122,6 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log("🚀 Server running on port " + PORT);
+
+    bot.setWebHook(`https://telegram-bot-production-c592.up.railway.app/bot${TOKEN}`);
 });
