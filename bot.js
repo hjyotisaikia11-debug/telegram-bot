@@ -44,7 +44,7 @@ bot.on('message', (msg) => {
     if (!users[id]) return;
 
     // ignore commands
-    if (msg.text.startsWith("/")) return;
+    if (!msg.text || msg.text.startsWith("/")) return;
 
     // VERIFY REQUEST
     if (!users[id].verified) {
