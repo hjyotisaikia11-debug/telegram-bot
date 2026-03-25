@@ -1,26 +1,26 @@
+// 🔥 CRASH PROTECTION
 process.on('uncaughtException', (err) => {
     console.log('Error:', err.message);
 });
 
 const TelegramBot = require('node-telegram-bot-api');
 
+// ❗ TOKEN CHECK
 if (!process.env.BOT_TOKEN) {
     console.log("❌ BOT_TOKEN missing!");
     process.exit(1);
 }
 
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
-
-bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, "✅ Bot working!");
+// ✅ SAFE POLLING (409 FIX HELP)
+const bot = new TelegramBot(process.env.BOT_TOKEN, {
+    polling: {
+        autoStart: true,
+        interval: 300,
+        params: { timeout: 10 }
+    }
 });
 
-console.log("🚀 Bot started...");
-
-const TelegramBot = require('node-telegram-bot-api');
-
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
-
+// 🔐 ADMIN ID (CHANGE THIS)
 const ADMIN_ID = 1342806336;
 
 let users = {};
@@ -38,7 +38,7 @@ function getMenu() {
     };
 }
 
-// START
+// 🚀 START
 bot.onText(/\/start/, (msg) => {
     const id = msg.chat.id;
 
@@ -47,22 +47,22 @@ bot.onText(/\/start/, (msg) => {
     bot.sendMessage(id,
 `🚀 Welcome
 
-🔗 https://www.czIndia.com/#/register?invitationCode=85821434737
+Niche Diye Link Pe Click Karke Register Karo & recharge Minimum 200₹ - 300₹
 
-Upar Diye Link Pe Click Karke Register Karo & recharge Minimum 200₹ - 300₹
+🔗 https://www.91appy.com/#/register?invitationCode=85821434737
 
 📩 Apna Game ID bhejo verification ke liye`,
     getMenu()
     );
 });
 
-// MESSAGE HANDLER
+// 📩 MESSAGE HANDLER
 bot.on('message', (msg) => {
     const id = msg.chat.id;
 
     if (!users[id]) return;
 
-    // ignore commands
+    // ❗ Fix crash (no text case)
     if (!msg.text || msg.text.startsWith("/")) return;
 
     // VERIFY REQUEST
@@ -73,7 +73,7 @@ bot.on('message', (msg) => {
 User ID: ${id}
 Message: ${msg.text}
 
-/approve ${id}`
+/approve ${id}  ya  /reject ${id}`
         );
 
         bot.sendMessage(id, "⏳ Verification pending...");
@@ -93,7 +93,7 @@ Message: ${msg.text}
     }
 });
 
-// ADMIN APPROVE
+// ✅ ADMIN APPROVE
 bot.onText(/\/approve (\d+)/, (msg, match) => {
     if (msg.chat.id != ADMIN_ID) return;
 
@@ -107,7 +107,16 @@ bot.onText(/\/approve (\d+)/, (msg, match) => {
     bot.sendMessage(userId, "✅ Verified! Prediction start ho gaya", getMenu());
 });
 
-// PREDICTION
+// ❌ ADMIN REJECT
+bot.onText(/\/reject (\d+)/, (msg, match) => {
+    if (msg.chat.id != ADMIN_ID) return;
+
+    const userId = match[1];
+
+    bot.sendMessage(userId, "❌ Verification failed");
+});
+
+// 🎯 PREDICTION LOGIC
 function getPrediction() {
     let result = Math.random() > 0.5 ? "BIG" : "SMALL";
 
@@ -117,7 +126,7 @@ function getPrediction() {
     return result;
 }
 
-// AUTO TIMER
+// ⏰ AUTO PREDICTION
 setInterval(() => {
     Object.keys(users).forEach(id => {
         if (users[id].verified && users[id].active) {
@@ -129,8 +138,10 @@ setInterval(() => {
 `⏰ AUTO PREDICTION
 
 🔥 RESULT → ${result}
-📊 Last 3 → ${last3}`
+📊 Last 3 → ${last3 || "No data"}`
             );
         }
     });
 }, 60000);
+
+console.log("🚀 Bot started successfully");
