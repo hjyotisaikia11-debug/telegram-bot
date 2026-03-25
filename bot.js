@@ -7,11 +7,23 @@ const ADMIN_ID = @guruji_i;
 let users = {};
 let history = [];
 
+// 🎛️ BUTTON MENU
+function getMenu() {
+    return {
+        reply_markup: {
+            keyboard: [
+                ["🟢 START", "🔴 STOP"]
+            ],
+            resize_keyboard: true
+        }
+    };
+}
+
 // START
 bot.onText(/\/start/, (msg) => {
     const id = msg.chat.id;
 
-    users[id] = { verified: false, active: true };
+    users[id] = { verified: false, active: false };
 
     bot.sendMessage(id,
 `🚀 Welcome
@@ -20,21 +32,21 @@ bot.onText(/\/start/, (msg) => {
 
 Upar Diye Link Pe Click Karke Register Karo & recharge Minimum 200₹ - 300₹
 
-📩 Apna Game ID bhejo verification ke liye
-
-⚙️ Commands:
-/stop - band
-/startpred - start`
+📩 Apna Game ID bhejo verification ke liye`,
+    getMenu()
     );
 });
 
-// USER MESSAGE (verification)
+// MESSAGE HANDLER
 bot.on('message', (msg) => {
     const id = msg.chat.id;
 
     if (!users[id]) return;
+
+    // ignore commands
     if (msg.text.startsWith("/")) return;
 
+    // VERIFY REQUEST
     if (!users[id].verified) {
         bot.sendMessage(ADMIN_ID,
 `🆕 Verification Request
@@ -46,37 +58,34 @@ Message: ${msg.text}
         );
 
         bot.sendMessage(id, "⏳ Verification pending...");
+        return;
+    }
+
+    // 🟢 START BUTTON
+    if (msg.text === "🟢 START") {
+        users[id].active = true;
+        bot.sendMessage(id, "▶️ Prediction chalu ho gaya", getMenu());
+    }
+
+    // 🔴 STOP BUTTON
+    if (msg.text === "🔴 STOP") {
+        users[id].active = false;
+        bot.sendMessage(id, "🛑 Prediction band ho gaya", getMenu());
     }
 });
 
-// ADMIN
+// ADMIN APPROVE
 bot.onText(/\/approve (\d+)/, (msg, match) => {
     if (msg.chat.id != ADMIN_ID) return;
 
     const userId = match[1];
 
+    if (!users[userId]) users[userId] = {};
+
     users[userId].verified = true;
     users[userId].active = true;
 
-    bot.sendMessage(userId, "✅ Verified!");
-});
-
-// STOP
-bot.onText(/\/stop/, (msg) => {
-    const id = msg.chat.id;
-    if (users[id]) users[id].active = false;
-
-    bot.sendMessage(id, "🛑 Prediction band");
-});
-
-// START AGAIN
-bot.onText(/\/startpred/, (msg) => {
-    const id = msg.chat.id;
-
-    if (users[id] && users[id].verified) {
-        users[id].active = true;
-        bot.sendMessage(id, "▶️ Prediction chalu");
-    }
+    bot.sendMessage(userId, "✅ Verified! Prediction start ho gaya", getMenu());
 });
 
 // PREDICTION
@@ -89,40 +98,20 @@ function getPrediction() {
     return result;
 }
 
-// ⏰ SYNC FUNCTION (main magic)
-function startSyncedTimer() {
-    const now = new Date();
-    const seconds = now.getSeconds();
+// AUTO TIMER
+setInterval(() => {
+    Object.keys(users).forEach(id => {
+        if (users[id].verified && users[id].active) {
 
-    // next minute ke 00 sec ka wait
-    const delay = (60 - seconds) * 1000;
+            let result = getPrediction();
+            let last3 = history.slice(0, 3).join(" | ");
 
-    setTimeout(() => {
-
-        // har 60 sec pe run hoga (aligned)
-        setInterval(() => {
-
-            Object.keys(users).forEach(id => {
-                if (users[id].verified && users[id].active) {
-
-                    let result = getPrediction();
-                    let last3 = history.slice(0, 3).join(" | ");
-
-                    bot.sendMessage(id,
-`⏰ SYNC PREDICTION
-
-🕐 Time: ${new Date().toLocaleTimeString()}
+            bot.sendMessage(id,
+`⏰ AUTO PREDICTION
 
 🔥 RESULT → ${result}
-📊 Last 3 → ${last3 || "No data"}`
-                    );
-                }
-            });
-
-        }, 60000);
-
-    }, delay);
-}
-
-// START TIMER
-startSyncedTimer();
+📊 Last 3 → ${last3}`
+            );
+        }
+    });
+}, 60000);
