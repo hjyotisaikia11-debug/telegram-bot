@@ -6,7 +6,7 @@
     "start": "node bot.js"
   },
   "engines": {
-  "node": "18.x"
+    "node": "18.x"
   },
   "dependencies": {
     "node-telegram-bot-api": "^0.61.0"
