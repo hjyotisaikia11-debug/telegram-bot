@@ -80,7 +80,7 @@ bot.onText(/\/approve (\d+)/, (msg, match) => {
 
     const userId = match[1];
 
-    if (!users[userId]) users[userId] = {};
+    users[userId] = users[userId] || { verified: false, active: false };
 
     users[userId].verified = true;
     users[userId].active = true;
